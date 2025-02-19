@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        select,
+        input,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .button-group button {
+            flex: 1;
+            margin: 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .select-all {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 600px) {
+
+            table,
+            th,
+            td {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Attendance System</h2>
+
+        <label for="section">Select Section:</label>
+        <select id="section" onchange="loadStudents()">
+            <option value="">Select Section</option>
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+            <option value="C">Section C</option>
+        </select>
+
+        <label for="subject">Select Subject:</label>
+        <select id="subject">
+            <option value="">Select Subject</option>
+            <option value="Maths">Maths</option>
+            <option value="Physics">Physics</option>
+            <option value="Computer Science">Computer Science</option>
+        </select>
+
+        <label for="time">Class Time (Range):</label>
+        <input type="time" id="startTime"> to <input type="time" id="endTime">
+
+        <label for="topic">Topic Taught:</label>
+        <input type="text" id="topic" placeholder="Enter Topic Covered">
+
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>USN</th>
+                    <th>Name</th>
+                    <th><button class="select-all" onclick="selectAll()">Select All as Present</button></th>
+                </tr>
+            </thead>
+            <tbody id="studentList">
+                <!-- Student rows will be inserted here dynamically -->
+            </tbody>
+        </table>
+
+        <div class="button-group">
+            <button class="submit-btn" onclick="submitAttendance()">Submit</button>
+        </div>
+    </div>
+
+    <script>
+        const studentsData = {
+            "A": [
+                { usn: "USN001", name: "Alice" },
+                { usn: "USN002", name: "Bob" },
+                { usn: "USN003", name: "Charlie" }
+            ],
+            "B": [
+                { usn: "USN004", name: "David" },
+                { usn: "USN005", name: "Emma" },
+                { usn: "USN006", name: "Frank" }
+            ],
+            "C": [
+                { usn: "USN007", name: "Grace" },
+                { usn: "USN008", name: "Hannah" },
+                { usn: "USN009", name: "Ian" }
+            ]
+        };
+
+        function loadStudents() {
+            let section = document.getElementById("section").value;
+            let studentList = document.getElementById("studentList");
+            studentList.innerHTML = "";
+
+            if (studentsData[section]) {
+                studentsData[section].forEach(student => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                    <td>${student.usn}</td>
+                    <td>${student.name}</td>
+                    <td><input type="checkbox" class="present-checkbox" data-usn="${student.usn}" data-name="${student.name}"></td>
+                `;
+                    studentList.appendChild(row);
+                });
+            }
+        }
+
+        function selectAll() {
+            let checkboxes = document.querySelectorAll(".present-checkbox");
+            checkboxes.forEach(checkbox => checkbox.checked = true);
+        }
+
+        function submitAttendance() {
+            let section = document.getElementById("section").value;
+            let subject = document.getElementById("subject").value;
+            let startTime = document.getElementById("startTime").value;
+            let endTime = document.getElementById("endTime").value;
+            let topic = document.getElementById("topic").value;
+
+            if (!section || !subject || !startTime || !endTime || !topic) {
+                alert("Please fill all details before submitting.");
+                return;
+            }
+
+            let attendanceData = {
+                section: section,
+                subject: subject,
+                time: `${startTime} - ${endTime}`,
+                topic: topic,
+                students: []
+            };
+
+            let checkboxes = document.querySelectorAll(".present-checkbox");
+            checkboxes.forEach(checkbox => {
+                attendanceData.students.push({
+                    usn: checkbox.getAttribute("data-usn"),
+                    name: checkbox.getAttribute("data-name"),
+                    present: checkbox.checked
+                });
+            });
+
+            console.log("Submitting Attendance:", attendanceData);
+
+            fetch("https://script.google.com/macros/s/AKfycbwidpETPkZfBD0LeRPu2ApbY3txY9L1bayTSUpo0tSAw0DjHDQsQYL0T0jc6QEocknEzw/exec", {
+                method: "POST",
+                mode: "no-cors", // Avoid CORS issues
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(attendanceData)
+            })
+                .then(response => console.log("Attendance submitted successfully!"))
+                .catch(error => console.error("Error submitting attendance:", error));
+
+            alert("Attendance Submitted! Check Google Sheet.");
+        }
+
+    </script>
+
+</body>
+
+</html>
